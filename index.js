@@ -1,35 +1,52 @@
-const MessagingResponse = require('twilio').twiml.MessagingResponse;
+
+
+
+
+const express = require('express');
+const { MessagingResponse } = require('twilio').twiml;
+require('dotenv').config();
+
+const app = express();
+app.use(express.urlencoded({ extended: false }));
+
+const PORT = process.env.PORT || 3000;
+
+// Define your PDF URLs as environment variables or hardcode here
+const BALI_PDF = process.env.BALI_PDF || 'https://drive.google.com/file/d/1SvSSBlG6mtQHbTKIusmi1G3JoTy-YQlV/view?usp=sharing';
+const EBC_PDF = process.env.EBC_PDF || 'https://drive.google.com/file/d/1YlmmVzr7BmhbUy5cJtLSLrInwatSmINT/view?usp=sharing';
+const ABC_PDF = process.env.ABC_PDF || 'https://drive.google.com/file/d/1BSPmeWLSl02WZgnamHT6FhjnbgQzOwbV/view?usp=sharing';
 
 app.post('/whatsapp', (req, res) => {
+  const msg = req.body.Body?.trim().toLowerCase();
   const twiml = new MessagingResponse();
-  const userMsg = req.body.Body.toLowerCase();
 
-  if (userMsg === 'hi') {
-    const message = twiml.message();
-    message.body('Welcome to Nomadller! Please choose a tour package:');
+  if (msg === 'hi' || msg === 'hello' || msg === 'start') {
+    twiml.message(
+      `👋 Welcome to Nomadller!
 
-    message.addButton({ type: 'quick_reply', title: 'Bali', id: 'bali_package' });
-    message.addButton({ type: 'quick_reply', title: 'Kerala', id: 'kerala_package' });
-    message.addButton({ type: 'quick_reply', title: 'Thailand', id: 'thailand_package' });
-    message.addButton({ type: 'quick_reply', title: 'Japan', id: 'japan_package' });
-    message.addButton({ type: 'quick_reply', title: 'Vietnam', id: 'vietnam_package' });
-    message.addButton({ type: 'quick_reply', title: 'Everest Base Camp', id: 'ebc_package' });
+Please choose a tour package:
+1. Bali Tour
+2. Everest Base Camp Trek
+3. Annapurna Base Camp Trek
 
-  } else if (userMsg === 'bali' || userMsg === 'bali_package') {
-    twiml.message('Here is your Bali itinerary: https://yourpdfurl.com/bali.pdf');
-  } else if (userMsg === 'kerala' || userMsg === 'kerala_package') {
-    twiml.message('Here is your Kerala itinerary: https://yourpdfurl.com/kerala.pdf');
-  } else if (userMsg === 'thailand' || userMsg === 'thailand_package') {
-    twiml.message('Here is your Thailand itinerary: https://yourpdfurl.com/thailand.pdf');
-  } else if (userMsg === 'japan' || userMsg === 'japan_package') {
-    twiml.message('Here is your Japan itinerary: https://yourpdfurl.com/japan.pdf');
-  } else if (userMsg === 'vietnam' || userMsg === 'vietnam_package') {
-    twiml.message('Here is your Vietnam itinerary: https://yourpdfurl.com/vietnam.pdf');
-  } else if (userMsg === 'everest base camp' || userMsg === 'ebc_package') {
-    twiml.message('Here is your Everest Base Camp itinerary: https://yourpdfurl.com/everest_base_camp.pdf');
+👉 Reply with: *Bali*, *Everest*, or *Annapurna* to get your itinerary.`
+    );
+  } else if (msg === 'bali') {
+    twiml.message(`📄 Here is your Bali itinerary: ${BALI_PDF}`);
+  } else if (msg === 'everest' || msg === 'everest base camp' || msg === 'ebc') {
+    twiml.message(`🏔️ Here is your Everest Base Camp Trek itinerary: ${EBC_PDF}`);
+  } else if (msg === 'annapurna' || msg === 'annapurna base camp' || msg === 'abc') {
+    twiml.message(`🏞️ Here is your Annapurna Base Camp Trek itinerary: ${ABC_PDF}`);
   } else {
-    twiml.message("Sorry, I didn't understand that. Please choose a package.");
+    twiml.message(`❓ Sorry, I didn't understand that.
+
+Type *Hi* to see available packages.`);
   }
 
-  res.type('text/xml').send(twiml.toString());
+  res.writeHead(200, { 'Content-Type': 'text/xml' });
+  res.end(twiml.toString());
+});
+
+app.listen(PORT, () => {
+  console.log(`Nomadller bot is running on port ${PORT}`);
 });
